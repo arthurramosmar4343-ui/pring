@@ -1,110 +1,127 @@
+pcall(function()
+
 local player = game.Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
-
--- CONFIG
-local agua = workspace:WaitForChild("Agua")
-local velocidade = 0.7
-
-local ligado = false
 
 -- GUI
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "WaterPanel"
+gui.Name = "PringX"
+gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0.1, 0, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(120, 70, 30) -- cor madeira
+frame.Size = UDim2.new(0, 320, 0, 160)
+frame.Position = UDim2.new(0.5, -160, 0.35, 0)
+frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+frame.Active = true
+frame.Draggable = true
 frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 18)
 
--- borda arredondada
-local corner = Instance.new("UICorner", frame)
-corner.CornerRadius = UDim.new(0, 12)
+-- TITULO RGB
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -20, 0, 50)
+title.Position = UDim2.new(0, 10, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "⚡ PRING X ELITE"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 26
+title.TextXAlignment = Enum.TextXAlignment.Left
 
--- título
-local titulo = Instance.new("TextLabel", frame)
-titulo.Size = UDim2.new(1, 0, 0.3, 0)
-titulo.Text = "Controle da Água"
-titulo.BackgroundTransparency = 1
-titulo.TextColor3 = Color3.new(1,1,1)
-titulo.Font = Enum.Font.GothamBold
-titulo.TextScaled = true
-
--- botão ON
-local on = Instance.new("TextButton", frame)
-on.Size = UDim2.new(0.45, 0, 0.4, 0)
-on.Position = UDim2.new(0.05, 0, 0.5, 0)
-on.Text = "ON"
-on.BackgroundColor3 = Color3.fromRGB(0,170,0)
-on.TextColor3 = Color3.new(1,1,1)
-
-local onCorner = Instance.new("UICorner", on)
-onCorner.CornerRadius = UDim.new(0, 8)
-
--- botão OFF
-local off = Instance.new("TextButton", frame)
-off.Size = UDim2.new(0.45, 0, 0.4, 0)
-off.Position = UDim2.new(0.5, 0, 0.5, 0)
-off.Text = "OFF"
-off.BackgroundColor3 = Color3.fromRGB(170,0,0)
-off.TextColor3 = Color3.new(1,1,1)
-
-local offCorner = Instance.new("UICorner", off)
-offCorner.CornerRadius = UDim.new(0, 8)
-
--- ARRASTAR
-local dragging = false
-local dragInput, mousePos, framePos
-
-frame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		mousePos = input.Position
-		framePos = frame.Position
-
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-frame.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement then
-		dragInput = input
-	end
-end)
-
-UIS.InputChanged:Connect(function(input)
-	if input == dragInput and dragging then
-		local delta = input.Position - mousePos
-		frame.Position = UDim2.new(
-			framePos.X.Scale,
-			framePos.X.Offset + delta.X,
-			framePos.Y.Scale,
-			framePos.Y.Offset + delta.Y
-		)
-	end
-end)
-
--- FUNÇÃO ÁGUA SUMINDO
 task.spawn(function()
-	while true do
-		task.wait(0.1)
-		
-		if ligado and agua.Size.Y > 0 then
-			agua.Size = agua.Size - Vector3.new(0, velocidade, 0)
-			agua.Position = agua.Position - Vector3.new(0, velocidade/2, 0)
-		end
-	end
+    while true do
+        for i = 0,1,0.01 do
+            title.TextColor3 = Color3.fromHSV(i,1,1)
+            task.wait(0.03)
+        end
+    end
 end)
 
--- BOTÕES
-on.MouseButton1Click:Connect(function()
-	ligado = true
+-- BOTÃO
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(1, -20, 0, 70)
+button.Position = UDim2.new(0, 10, 0.55, -10)
+button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+button.Text = "[ OFF ] Plataforma Água"
+button.TextColor3 = Color3.new(1,1,1)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 20
+Instance.new("UICorner", button).CornerRadius = UDim.new(0, 16)
+
+-- VAR
+local ativo = false
+local plataformas = {}
+
+-- CRIAR PLATAFORMA
+local function criarPlataformas()
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") then
+            local name = string.lower(v.Name)
+
+            if v.Material == Enum.Material.Water
+            or string.find(name, "water")
+            or string.find(name, "agua") then
+
+                local p = Instance.new("Part")
+                p.Size = v.Size
+                
+                -- 🔥 ALTERADO AQUI (MAIS ALTO)
+                p.CFrame = v.CFrame + Vector3.new(0, 3, 0)
+                
+                p.Anchored = true
+                p.Transparency = 1
+                p.CanCollide = true
+                p.Name = "PringPlatform"
+                p.Parent = workspace
+
+                table.insert(plataformas, p)
+            end
+        end
+    end
+end
+
+-- LIMPAR
+local function removerPlataformas()
+    for _, p in pairs(plataformas) do
+        if p then p:Destroy() end
+    end
+    plataformas = {}
+end
+
+-- ANTI PERDER
+local function antiPerder()
+    local char = player.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.Health = humanoid.MaxHealth
+        end
+    end
+end
+
+-- LOOP
+local function iniciar()
+    criarPlataformas()
+
+    task.spawn(function()
+        while ativo do
+            task.wait(1)
+            antiPerder()
+        end
+    end)
+end
+
+-- BOTÃO
+button.MouseButton1Click:Connect(function()
+    ativo = not ativo
+
+    if ativo then
+        button.Text = "[ ON ] Plataforma Água"
+        button.BackgroundColor3 = Color3.fromRGB(0,200,120)
+        iniciar()
+    else
+        button.Text = "[ OFF ] Plataforma Água"
+        button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        removerPlataformas()
+    end
 end)
 
-off.MouseButton1Click:Connect(function()
-	ligado = false
 end)
