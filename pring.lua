@@ -1,134 +1,110 @@
-local p=game.Players.LocalPlayer
-local u=game:GetService("UserInputService")
-local t=game:GetService("TweenService")
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
 
-local g=Instance.new("ScreenGui",p:WaitForChild("PlayerGui"))
+-- CONFIG
+local agua = workspace:WaitForChild("Agua")
+local velocidade = 0.7
 
-local f=Instance.new("Frame",g)
-f.Size=UDim2.new(0,320,0,140)
-f.Position=UDim2.new(0.5,-160,0.2,0)
-f.BackgroundColor3=Color3.fromRGB(20,20,20)
-f.BorderSizePixel=0
-Instance.new("UICorner",f).CornerRadius=UDim.new(0,16)
+local ligado = false
 
--- Título
-local title=Instance.new("TextLabel",f)
-title.Size=UDim2.new(1,-50,0,40)
-title.Position=UDim2.new(0,10,0,0)
-title.BackgroundTransparency=1
-title.Text="✖ Pring Script"
-title.TextColor3=Color3.fromRGB(120,180,255)
-title.Font=Enum.Font.GothamBold
-title.TextScaled=true
-title.TextXAlignment=Enum.TextXAlignment.Left
+-- GUI
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "WaterPanel"
 
--- Fechar
-local close=Instance.new("TextButton",f)
-close.Size=UDim2.new(0,40,0,40)
-close.Position=UDim2.new(1,-45,0,5)
-close.Text="X"
-close.BackgroundColor3=Color3.fromRGB(200,50,50)
-close.TextColor3=Color3.new(1,1,1)
-close.Font=Enum.Font.GothamBold
-close.TextScaled=true
-Instance.new("UICorner",close).CornerRadius=UDim.new(0,10)
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.1, 0, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(120, 70, 30) -- cor madeira
+frame.BorderSizePixel = 0
 
-close.MouseButton1Click:Connect(function()
-	f:Destroy()
-end)
+-- borda arredondada
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0, 12)
 
--- Botão água
-local water=Instance.new("TextButton",f)
-water.Size=UDim2.new(0.9,0,0,50)
-water.Position=UDim2.new(0.05,0,0.45,0)
-water.Text="[ OFF ] Remover Água"
-water.TextColor3=Color3.new(1,1,1)
-water.Font=Enum.Font.GothamBold
-water.TextScaled=true
-water.BackgroundColor3=Color3.fromRGB(170,0,0)
-Instance.new("UICorner",water).CornerRadius=UDim.new(0,12)
+-- título
+local titulo = Instance.new("TextLabel", frame)
+titulo.Size = UDim2.new(1, 0, 0.3, 0)
+titulo.Text = "Controle da Água"
+titulo.BackgroundTransparency = 1
+titulo.TextColor3 = Color3.new(1,1,1)
+titulo.Font = Enum.Font.GothamBold
+titulo.TextScaled = true
 
-local ativo=false
+-- botão ON
+local on = Instance.new("TextButton", frame)
+on.Size = UDim2.new(0.45, 0, 0.4, 0)
+on.Position = UDim2.new(0.05, 0, 0.5, 0)
+on.Text = "ON"
+on.BackgroundColor3 = Color3.fromRGB(0,170,0)
+on.TextColor3 = Color3.new(1,1,1)
 
-local function animarCor(c)
-	t:Create(water,TweenInfo.new(0.25),{BackgroundColor3=c}):Play()
-end
+local onCorner = Instance.new("UICorner", on)
+onCorner.CornerRadius = UDim.new(0, 8)
 
-water.MouseButton1Click:Connect(function()
-	ativo=not ativo
+-- botão OFF
+local off = Instance.new("TextButton", frame)
+off.Size = UDim2.new(0.45, 0, 0.4, 0)
+off.Position = UDim2.new(0.5, 0, 0.5, 0)
+off.Text = "OFF"
+off.BackgroundColor3 = Color3.fromRGB(170,0,0)
+off.TextColor3 = Color3.new(1,1,1)
 
-	if ativo then
-		water.Text="[ ON ] Remover Água"
-		animarCor(Color3.fromRGB(0,170,0))
+local offCorner = Instance.new("UICorner", off)
+offCorner.CornerRadius = UDim.new(0, 8)
 
-		for _,v in pairs(workspace:GetDescendants()) do
-			if v:IsA("Part") or v:IsA("MeshPart") then
-				if v.Material==Enum.Material.Water then
-					v.Transparency=1
-					v.CanCollide=false
-				end
-			end
-		end
+-- ARRASTAR
+local dragging = false
+local dragInput, mousePos, framePos
 
-		local terrain=workspace:FindFirstChildOfClass("Terrain")
-		if terrain then
-			terrain.WaterTransparency=1
-		end
-
-	else
-		water.Text="[ OFF ] Remover Água"
-		animarCor(Color3.fromRGB(170,0,0))
-
-		for _,v in pairs(workspace:GetDescendants()) do
-			if v:IsA("Part") or v:IsA("MeshPart") then
-				if v.Material==Enum.Material.Water then
-					v.Transparency=0
-					v.CanCollide=true
-				end
-			end
-		end
-
-		local terrain=workspace:FindFirstChildOfClass("Terrain")
-		if terrain then
-			terrain.WaterTransparency=0
-		end
-	end
-end)
-
--- DRAG 🔥
-local dragging=false
-local dragStart
-local startPos
-
-f.InputBegan:Connect(function(input)
-	if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-		dragging=true
-		dragStart=input.Position
-		startPos=f.Position
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		mousePos = input.Position
+		framePos = frame.Position
 
 		input.Changed:Connect(function()
-			if input.UserInputState==Enum.UserInputState.End then
-				dragging=false
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
 			end
 		end)
 	end
 end)
 
-u.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
-		local delta=input.Position-dragStart
+frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
 
-		f.Position=UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset+delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset+delta.Y
+UIS.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - mousePos
+		frame.Position = UDim2.new(
+			framePos.X.Scale,
+			framePos.X.Offset + delta.X,
+			framePos.Y.Scale,
+			framePos.Y.Offset + delta.Y
 		)
 	end
 end)
 
--- animação entrada
-f.Position=UDim2.new(0.5,-160,-0.3,0)
-t:Create(f,TweenInfo.new(0.4),{
-	Position=UDim2.new(0.5,-160,0.2,0)
-}):Play()
+-- FUNÇÃO ÁGUA SUMINDO
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		
+		if ligado and agua.Size.Y > 0 then
+			agua.Size = agua.Size - Vector3.new(0, velocidade, 0)
+			agua.Position = agua.Position - Vector3.new(0, velocidade/2, 0)
+		end
+	end
+end)
+
+-- BOTÕES
+on.MouseButton1Click:Connect(function()
+	ligado = true
+end)
+
+off.MouseButton1Click:Connect(function()
+	ligado = false
+end)
