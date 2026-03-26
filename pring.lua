@@ -1,121 +1,72 @@
--- PRING PVP (WATER FIX + DRAG)
+local p = game.Players.LocalPlayer
+local t = game:GetService("TweenService")
 
-local p=game.Players.LocalPlayer
-local u=game:GetService("UserInputService")
-local t=game:GetService("TweenService")
+local g = Instance.new("ScreenGui", p:WaitForChild("PlayerGui"))
 
-local g=Instance.new("ScreenGui",p:WaitForChild("PlayerGui"))
+-- FRAME
+local f = Instance.new("Frame", g)
+f.Size = UDim2.new(0, 320, 0, 140)
+f.Position = UDim2.new(0.5, -160, 0.2, 0)
+f.BackgroundColor3 = Color3.fromRGB(20,20,20)
+f.BorderSizePixel = 0
+Instance.new("UICorner", f).CornerRadius = UDim.new(0, 16)
 
-local f=Instance.new("Frame",g)
-f.Size=UDim2.new(0,280,0,110)
-f.Position=UDim2.new(0.5,-140,0.25,0)
-f.BackgroundColor3=Color3.fromRGB(25,25,25)
-f.BorderSizePixel=0
-Instance.new("UICorner",f).CornerRadius=UDim.new(0,12)
+-- TÍTULO
+local title = Instance.new("TextLabel", f)
+title.Size = UDim2.new(1, -50, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "✖ Pring Script"
+title.TextColor3 = Color3.fromRGB(120,180,255)
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextXAlignment = Enum.TextXAlignment.Left
 
-local ti=Instance.new("TextLabel",f)
-ti.Size=UDim2.new(1,0,0,35)
-ti.BackgroundTransparency=1
-ti.Text="✖ Pring PvP"
-ti.TextColor3=Color3.fromRGB(180,120,255)
-ti.Font=Enum.Font.GothamBold
-ti.TextScaled=true
+-- BOTÃO FECHAR
+local close = Instance.new("TextButton", f)
+close.Size = UDim2.new(0, 40, 0, 40)
+close.Position = UDim2.new(1, -45, 0, 5)
+close.Text = "X"
+close.BackgroundColor3 = Color3.fromRGB(200,50,50)
+close.TextColor3 = Color3.new(1,1,1)
+close.Font = Enum.Font.GothamBold
+close.TextScaled = true
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 10)
 
-local b=Instance.new("TextButton",f)
-b.Size=UDim2.new(0.85,0,0,45)
-b.Position=UDim2.new(0.075,0,0.5,0)
-b.Text="[ ON ] Remover Água"
-b.TextColor3=Color3.new(1,1,1)
-b.Font=Enum.Font.GothamBold
-b.TextScaled=true
-b.BackgroundColor3=Color3.fromRGB(0,170,120)
-Instance.new("UICorner",b).CornerRadius=UDim.new(0,10)
+close.MouseButton1Click:Connect(function()
+	f:Destroy()
+end)
 
-local gr=Instance.new("UIGradient",b)
-gr.Color=ColorSequence.new{
-	ColorSequenceKeypoint.new(0,Color3.fromRGB(0,200,150)),
-	ColorSequenceKeypoint.new(1,Color3.fromRGB(0,120,255))
-}
+-- BOTÃO REMOVER ÁGUA
+local water = Instance.new("TextButton", f)
+water.Size = UDim2.new(0.9, 0, 0, 50)
+water.Position = UDim2.new(0.05, 0, 0.45, 0)
+water.BackgroundColor3 = Color3.fromRGB(40,40,40)
+water.Text = "Remover Água"
+water.TextColor3 = Color3.new(1,1,1)
+water.Font = Enum.Font.GothamBold
+water.TextScaled = true
+Instance.new("UICorner", water).CornerRadius = UDim.new(0, 12)
 
--- animação
-f.Position=UDim2.new(0.5,-140,-0.3,0)
-t:Create(f,TweenInfo.new(0.6,Enum.EasingStyle.Quad),{
-	Position=UDim2.new(0.5,-140,0.25,0)
-}):Play()
-
--- REMOVER ÁGUA (FIX 🔥)
-local a=true
-local function r()
-	local terrain=workspace:FindFirstChildOfClass("Terrain")
-	if terrain then
-		pcall(function()
-			terrain:ReplaceMaterial(Enum.Material.Water,Enum.Material.Air)
-		end)
-	end
-	
+-- FUNÇÃO REMOVER ÁGUA (VISUAL)
+water.MouseButton1Click:Connect(function()
 	for _,v in pairs(workspace:GetDescendants()) do
 		if v:IsA("Part") or v:IsA("MeshPart") then
-			if v.Name:lower():find("water") or v.Material==Enum.Material.Water then
-				pcall(function() v:Destroy() end)
+			if v.Material == Enum.Material.Water then
+				v.Transparency = 1
+				v.CanCollide = false
 			end
 		end
 	end
-end
 
--- botão animação
-local function an(s)
-	t:Create(b,TweenInfo.new(0.1),{
-		Size=UDim2.new(0.85*s,0,0,45*s)
-	}):Play()
-end
-
-b.MouseButton1Down:Connect(function()an(0.95)end)
-b.MouseButton1Up:Connect(function()an(1)end)
-
-b.MouseButton1Click:Connect(function()
-	a=not a
-	if a then
-		b.Text="[ ON ] Remover Água"
-		r()
-		t:Create(b,TweenInfo.new(0.3),{
-			BackgroundColor3=Color3.fromRGB(0,170,120)
-		}):Play()
-	else
-		b.Text="[ OFF ] Remover Água"
-		t:Create(b,TweenInfo.new(0.3),{
-			BackgroundColor3=Color3.fromRGB(170,0,0)
-		}):Play()
+	local terrain = workspace:FindFirstChildOfClass("Terrain")
+	if terrain then
+		terrain.WaterTransparency = 1
 	end
 end)
 
--- DRAG CORRIGIDO
-local dragging=false
-local dragStart
-local startPos
-
-f.InputBegan:Connect(function(input)
-	if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-		dragging=true
-		dragStart=input.Position
-		startPos=f.Position
-
-		input.Changed:Connect(function()
-			if input.UserInputState==Enum.UserInputState.End then
-				dragging=false
-			end
-		end)
-	end
-end)
-
-u.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
-		local delta=input.Position-dragStart
-
-		f.Position=UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset+delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset+delta.Y
-		)
-	end
-end)
+-- ANIMAÇÃO
+f.Position = UDim2.new(0.5, -160, -0.3, 0)
+t:Create(f, TweenInfo.new(0.4), {
+	Position = UDim2.new(0.5, -160, 0.2, 0)
+}):Play()
