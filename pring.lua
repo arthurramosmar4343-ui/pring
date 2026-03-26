@@ -1,132 +1,109 @@
--- PRING PVP - GUI BONITA + ARRASTÁVEL + ANIMAÇÕES
+-- PRING PVP (DRAG CORRIGIDO)
 
-local player = game.Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local p=game.Players.LocalPlayer
+local u=game:GetService("UserInputService")
+local t=game:GetService("TweenService")
 
--- GUI
-local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local g=Instance.new("ScreenGui",p:WaitForChild("PlayerGui"))
 
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 280, 0, 110)
-Frame.Position = UDim2.new(0.5, -140, 0.25, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Frame.BorderSizePixel = 0
+local f=Instance.new("Frame",g)
+f.Size=UDim2.new(0,280,0,110)
+f.Position=UDim2.new(0.5,-140,0.25,0)
+f.BackgroundColor3=Color3.fromRGB(25,25,25)
+f.BorderSizePixel=0
+Instance.new("UICorner",f).CornerRadius=UDim.new(0,12)
 
-Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
+local ti=Instance.new("TextLabel",f)
+ti.Size=UDim2.new(1,0,0,35)
+ti.BackgroundTransparency=1
+ti.Text="✖ Pring PvP"
+ti.TextColor3=Color3.fromRGB(180,120,255)
+ti.Font=Enum.Font.GothamBold
+ti.TextScaled=true
 
--- Título
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.BackgroundTransparency = 1
-Title.Text = "✖ Pring PvP"
-Title.TextColor3 = Color3.fromRGB(180,120,255)
-Title.Font = Enum.Font.GothamBold
-Title.TextScaled = true
+local b=Instance.new("TextButton",f)
+b.Size=UDim2.new(0.85,0,0,45)
+b.Position=UDim2.new(0.075,0,0.5,0)
+b.Text="[ ON ] Remover Água"
+b.TextColor3=Color3.new(1,1,1)
+b.Font=Enum.Font.GothamBold
+b.TextScaled=true
+b.BackgroundColor3=Color3.fromRGB(0,170,120)
+Instance.new("UICorner",b).CornerRadius=UDim.new(0,10)
 
--- Botão
-local Button = Instance.new("TextButton", Frame)
-Button.Size = UDim2.new(0.85, 0, 0, 45)
-Button.Position = UDim2.new(0.075, 0, 0.5, 0)
-Button.Text = "[ ON ] Remover Água"
-Button.TextColor3 = Color3.new(1,1,1)
-Button.Font = Enum.Font.GothamBold
-Button.TextScaled = true
-Button.BackgroundColor3 = Color3.fromRGB(0,170,120)
-
-Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 10)
-
--- GRADIENTE
-local UIGradient = Instance.new("UIGradient", Button)
-UIGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,200,150)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,120,255))
+local gr=Instance.new("UIGradient",b)
+gr.Color=ColorSequence.new{
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(0,200,150)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(0,120,255))
 }
 
--- ANIMAÇÃO DE ENTRADA
-Frame.Position = UDim2.new(0.5, -140, -0.3, 0)
-TweenService:Create(Frame, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
-    Position = UDim2.new(0.5, -140, 0.25, 0)
+-- animação entrada
+f.Position=UDim2.new(0.5,-140,-0.3,0)
+t:Create(f,TweenInfo.new(0.6,Enum.EasingStyle.Quad),{
+	Position=UDim2.new(0.5,-140,0.25,0)
 }):Play()
 
--- FUNÇÃO REMOVER ÁGUA
-local ativo = true
-local function removerAgua()
-    local terrain = workspace:FindFirstChildOfClass("Terrain")
-    if terrain then
-        terrain:Clear()
-    end
+-- função água
+local a=true
+local function r()
+	local te=workspace:FindFirstChildOfClass("Terrain")
+	if te then te:Clear() end
 end
 
--- ANIMAÇÃO BOTÃO
-local function animarBotao(scale)
-    local tween = TweenService:Create(Button, TweenInfo.new(0.1), {
-        Size = UDim2.new(0.85 * scale, 0, 0, 45 * scale)
-    })
-    tween:Play()
+-- botão animação
+local function an(s)
+	t:Create(b,TweenInfo.new(0.1),{
+		Size=UDim2.new(0.85*s,0,0,45*s)
+	}):Play()
 end
 
-Button.MouseButton1Down:Connect(function()
-    animarBotao(0.95)
+b.MouseButton1Down:Connect(function()an(0.95)end)
+b.MouseButton1Up:Connect(function()an(1)end)
+
+b.MouseButton1Click:Connect(function()
+	a=not a
+	if a then
+		b.Text="[ ON ] Remover Água"
+		r()
+		t:Create(b,TweenInfo.new(0.3),{
+			BackgroundColor3=Color3.fromRGB(0,170,120)
+		}):Play()
+	else
+		b.Text="[ OFF ] Remover Água"
+		t:Create(b,TweenInfo.new(0.3),{
+			BackgroundColor3=Color3.fromRGB(170,0,0)
+		}):Play()
+	end
 end)
 
-Button.MouseButton1Up:Connect(function()
-    animarBotao(1)
+-- DRAG CORRIGIDO 🔥
+local dragging=false
+local dragStart
+local startPos
+
+f.InputBegan:Connect(function(input)
+	if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+		dragging=true
+		dragStart=input.Position
+		startPos=f.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState==Enum.UserInputState.End then
+				dragging=false
+			end
+		end)
+	end
 end)
 
--- CLICK
-Button.MouseButton1Click:Connect(function()
-    ativo = not ativo
-    
-    if ativo then
-        Button.Text = "[ ON ] Remover Água"
-        removerAgua()
+u.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
+		local delta=input.Position-dragStart
 
-        TweenService:Create(Button, TweenInfo.new(0.3), {
-            BackgroundColor3 = Color3.fromRGB(0,170,120)
-        }):Play()
-
-    else
-        Button.Text = "[ OFF ] Remover Água"
-
-        TweenService:Create(Button, TweenInfo.new(0.3), {
-            BackgroundColor3 = Color3.fromRGB(170,0,0)
-        }):Play()
-    end
-end)
-
--- ARRASTAR (DRAG)
-local dragging = false
-local dragInput, mousePos, framePos
-
-Frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        mousePos = input.Position
-        framePos = Frame.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-Frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - mousePos
-        Frame.Position = UDim2.new(
-            framePos.X.Scale,
-            framePos.X.Offset + delta.X,
-            framePos.Y.Scale,
-            framePos.Y.Offset + delta.Y
-        )
-    end
+		f.Position=UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset+delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset+delta.Y
+		)
+	end
 end)
