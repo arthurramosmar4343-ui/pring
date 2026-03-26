@@ -1,4 +1,4 @@
--- PRING PVP (DRAG CORRIGIDO)
+-- PRING PVP (WATER FIX + DRAG)
 
 local p=game.Players.LocalPlayer
 local u=game:GetService("UserInputService")
@@ -37,17 +37,29 @@ gr.Color=ColorSequence.new{
 	ColorSequenceKeypoint.new(1,Color3.fromRGB(0,120,255))
 }
 
--- animação entrada
+-- animação
 f.Position=UDim2.new(0.5,-140,-0.3,0)
 t:Create(f,TweenInfo.new(0.6,Enum.EasingStyle.Quad),{
 	Position=UDim2.new(0.5,-140,0.25,0)
 }):Play()
 
--- função água
+-- REMOVER ÁGUA (FIX 🔥)
 local a=true
 local function r()
-	local te=workspace:FindFirstChildOfClass("Terrain")
-	if te then te:Clear() end
+	local terrain=workspace:FindFirstChildOfClass("Terrain")
+	if terrain then
+		pcall(function()
+			terrain:ReplaceMaterial(Enum.Material.Water,Enum.Material.Air)
+		end)
+	end
+	
+	for _,v in pairs(workspace:GetDescendants()) do
+		if v:IsA("Part") or v:IsA("MeshPart") then
+			if v.Name:lower():find("water") or v.Material==Enum.Material.Water then
+				pcall(function() v:Destroy() end)
+			end
+		end
+	end
 end
 
 -- botão animação
@@ -76,7 +88,7 @@ b.MouseButton1Click:Connect(function()
 	end
 end)
 
--- DRAG CORRIGIDO 🔥
+-- DRAG CORRIGIDO
 local dragging=false
 local dragStart
 local startPos
